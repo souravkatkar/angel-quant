@@ -18,6 +18,27 @@ document.addEventListener('DOMContentLoaded', () => {
         startOfDay.setHours(0, 0, 0, 0);
         startDateInput.value = formatDateTimeLocal(startOfDay);
         
+        // Setup Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        if (document.documentElement.getAttribute('data-theme') === 'dark') {
+            themeToggle.textContent = '☀️';
+        } else {
+            themeToggle.textContent = '🌙';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.textContent = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.textContent = '☀️';
+            }
+        });
+
         console.log("✓ main.js loaded successfully and dates populated.");
     } catch (e) {
         console.error("Error setting dates:", e);
