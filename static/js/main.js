@@ -124,8 +124,25 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
     const csvText = document.getElementById('csvOutput').value;
     const copyBtn = document.getElementById('copyBtn');
     
-    await navigator.clipboard.writeText(csvText);
-    const originalText = copyBtn.textContent;
-    copyBtn.textContent = 'Copied!';
-    setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(csvText);
+        } else {
+            // Fallback for non-HTTPS (HTTP) connections
+            const textArea = document.createElement("textarea");
+            textArea.value = csvText;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            textArea.remove();
+        }
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+    } catch (err) {
+        console.error("Copy failed:", err);
+        alert("Unable to copy to clipboard. Your browser might block this action on HTTP.");
+    }
 });
