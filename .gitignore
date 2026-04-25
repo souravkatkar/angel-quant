@@ -1,30 +1,12 @@
-# Virtual Environment
-venv/
-.venv/
-env/
-
-# Python cache
-__pycache__/
-*.py[cod]
-*.pyo
-
-# Environment variables — never commit credentials
+# Environments
 .env
+.venv
+env/
+venv/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
+# App Data
+.session.json
 
-# Data files — too large for git
-data/instruments.json
-
-# Logs
-logs/
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
+# Python
+__pycache__/
+*.pyc

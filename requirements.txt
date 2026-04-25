@@ -1,0 +1,6 @@
+flask
+pandas
+PyJWT
+pyotp
+python-dotenv
+requests

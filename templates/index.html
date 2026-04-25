@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angel Quant Data Fetcher</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 { margin-top: 0; color: #2c3e50; }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row > .form-group { flex: 1; }
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        select, input[type="datetime-local"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #2980b9; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        
+        .output-section { margin-top: 30px; display: none; }
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .output-header h3 { margin: 0; }
+        .btn-copy {
+            background-color: #2ecc71;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        .btn-copy:hover { background-color: #27ae60; }
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-weight: 600;
+            display: none;
+        }
+        /* Table Styles */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 400px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap;
+        }
+        .data-table th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Historical Data Fetcher</h1>
+        <form id="fetchForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="symbol">Index</label>
+                    <select id="symbol" required>
+                        <option value="NIFTY">NIFTY</option>
+                        <option value="BANK NIFTY">BANK NIFTY</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="interval">Interval</label>
+                    <select id="interval" required>
+                        <option value="1m">1 Minute</option>
+                        <option value="3m">3 Minutes</option>
+                        <option value="5m" selected>5 Minutes</option>
+                        <option value="10m">10 Minutes</option>
+                        <option value="15m">15 Minutes</option>
+                        <option value="30m">30 Minutes</option>
+                        <option value="1h">1 Hour</option>
+                        <option value="1d">1 Day</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="datetime-local" id="startDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="datetime-local" id="endDate" required>
+                </div>
+            </div>
+            <button type="submit" id="submitBtn">Fetch Data</button>
+            <div id="errorMsg" class="error-message"></div>
+        </form>
+
+        <div class="output-section" id="outputSection">
+            <div class="output-header">
+                <h3>Result</h3>
+                <button type="button" class="btn-copy" id="copyBtn">Copy as CSV</button>
+            </div>
+            <div id="tableContainer" class="table-responsive"></div>
+            <textarea id="csvOutput" style="display: none;" readonly></textarea>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}?t={{ range(1, 999999) | random }}" defer></script>
+</body>
+</html>

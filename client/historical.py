@@ -9,8 +9,8 @@ Usage:
 """
 
 import json
-import http.client
 import pandas as pd
+import requests
 from datetime import datetime
 from client.connection import get_headers
 
@@ -105,16 +105,13 @@ def get_candle_data(
         "todate":      to_date,
     }
 
-    conn = http.client.HTTPSConnection(BASE_HOST)
-    conn.request(
-        "POST",
-        HISTORICAL_PATH,
-        body=json.dumps(payload),
-        headers=get_headers(auth_token),
-    )
-    res      = conn.getresponse()
-    response = json.loads(res.read().decode("utf-8"))
-    conn.close()
+    url = f"https://{BASE_HOST}{HISTORICAL_PATH}"
+    try:
+        res = requests.post(url, json=payload, headers=get_headers(auth_token), timeout=30)
+        res.raise_for_status()
+        response = res.json()
+    except requests.exceptions.RequestException as e:
+        raise RuntimeError(f"Historical API request failed: {e}")
 
     if not response.get("status"):
         raise RuntimeError(
@@ -133,7 +130,7 @@ def get_candle_data(
     df = pd.DataFrame(raw, columns=["timestamp", "open", "high", "low", "close", "volume"])
 
     # Clean up timestamp — Angel One returns ISO 8601 with IST offset
-    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True).dt.tz_convert("Asia/Kolkata")
+    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True).dt.tz_convert("Asia/Kolkata").dt.tz_localize(None)
     df.set_index("timestamp", inplace=True)
 
     # Correct dtypes
