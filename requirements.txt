@@ -5,3 +5,4 @@ PyJWT
 pyotp
 python-dotenv
 requests
+google-genai
