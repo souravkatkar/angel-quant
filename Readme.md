@@ -16,15 +16,16 @@ The platform is currently hosted online via the Oracle Cloud Free Tier, making m
 🌐 **[Live Instance](http://80.225.238.68/)**
 
 ## Features
-- **Modern Web Interface:** Fully responsive, modern UI featuring a Dark/Light mode toggle and a high-performance CSS-only animated mesh gradient background.
+- **Modern Web Interface:** Fully responsive, modern dual-tab UI (Live Dashboard & AI Intelligence) using Tailwind CSS and DaisyUI, featuring a Dark/Light mode toggle and a high-performance CSS-only animated mesh gradient background.
 - **SmartAPI Integration:** Automated login, TOTP generation, JWT token caching, and background session refreshing.
 - **Live Data Retrieval:** Fetch precise recent OHLC data via Angel One's API for indices like NIFTY and BANK NIFTY across customizable timeframes.
 - **Data Export & Visualization:** View data in an elegant, zebra-striped HTML table and instantly copy it as a CSV for AI ingestion, Excel, or Python workflows.
-- 🚀 **Coming Soon - AI Market Intelligence (WIP):** An upcoming feature designed to leverage the extracted data for automated market analysis, trend detection, and AI-driven intelligence.
+- 🚀 **AI Market Intelligence:** Integrated with Google's Gemini API to provide live, multi-timeframe technical analysis. Automatically evaluates the last 4 weeks of Daily data (macro trend) alongside 1 week of 15-minute data (micro price action) to deliver instant support/resistance levels and a directional bias.
 
 ## Prerequisites
 - Python 3.8+
 - Angel One API credentials (Client ID, MPIN, API Key, TOTP Secret)
+- Google Gemini API Key
 
 ## Project Structure
 ```text
@@ -53,6 +54,7 @@ angel-quant/
    MPIN=your_mpin
    TOTP_SECRET=your_totp_secret
    API_KEY=your_api_key
+   GEMINI_API_KEY=your_gemini_api_key
    CLIENT_LOCAL_IP=127.0.0.1
    CLIENT_PUBLIC_IP=127.0.0.1
    MAC_ADDRESS=00:00:00:00:00:00
