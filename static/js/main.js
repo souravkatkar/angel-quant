@@ -67,6 +67,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+document.getElementById('aiAnalyzeBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('aiAnalyzeBtn');
+    const output = document.getElementById('aiOutput');
+    const symbol = document.getElementById('aiSymbol').value;
+
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+    output.value = `Analyzing live market data for ${symbol}...\nPlease wait.`;
+
+    try {
+        const response = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbol: symbol })
+        });
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            output.value = result.analysis;
+        } else {
+            throw new Error(result.message || 'Failed to fetch analysis');
+        }
+    } catch (error) {
+        output.value = 'Error generating analysis: ' + error.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Get Live Market Analysis';
+    }
+});
+
 document.getElementById('fetchForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const submitBtn = document.getElementById('submitBtn');

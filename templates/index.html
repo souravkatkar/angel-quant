@@ -120,7 +120,7 @@
             font-size: 14px;
             color: var(--text-main);
         }
-        select, input[type="datetime-local"] {
+        select, input[type="datetime-local"], textarea.ai-textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid var(--border);
@@ -133,7 +133,12 @@
             min-height: 52px;
             box-sizing: border-box;
         }
-        select:focus, input[type="datetime-local"]:focus {
+        textarea.ai-textarea {
+            resize: vertical;
+            min-height: 250px;
+            line-height: 1.6;
+        }
+        select:focus, input[type="datetime-local"]:focus, textarea.ai-textarea:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
         }
@@ -354,9 +359,23 @@
         </div>
 
         <!-- Tab 2: AI Market Intelligence (Secondary Use) -->
-        <div id="content-ai" style="display: none;" class="text-center py-10">
-            <h2 class="text-2xl font-bold mb-4" style="color: var(--text-main);">AI Market Intelligence</h2>
-            <p style="color: var(--text-muted);">Secondary AI functionality coming soon...</p>
+        <div id="content-ai" style="display: none;">
+            <div class="form-row" style="margin-bottom: 20px;">
+                <div class="form-group">
+                    <label for="aiSymbol">Index</label>
+                    <select id="aiSymbol">
+                        <option value="NIFTY">NIFTY</option>
+                        <option value="BANK NIFTY">BANK NIFTY</option>
+                    </select>
+                </div>
+                <div class="form-group" style="justify-content: flex-end;">
+                    <button type="button" id="aiAnalyzeBtn">Get Live Market Analysis</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="aiOutput">Market Analysis</label>
+                <textarea id="aiOutput" class="ai-textarea" placeholder="AI Analysis will appear here..." readonly></textarea>
+            </div>
         </div>
     </div>
     

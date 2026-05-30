@@ -1,7 +1,13 @@
 import os
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
 from client.connection import get_session
 from client.historical import get_candle_data
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+
+load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(
@@ -85,6 +91,73 @@ def fetch_data():
         print(f"❌ BACKEND ERROR: {str(e)}")
         print("="*50 + "\n")
         return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route('/api/analyze', methods=['POST'])
+def analyze_market():
+    """API Endpoint to fetch historical data and analyze it using Gemini."""
+    print("\n" + "="*50)
+    print("🤖 NEW AI ANALYSIS REQUEST TRIGGERED")
+    try:
+        data = request.json
+        ui_symbol = data.get('symbol', 'NIFTY')
+        token = SYMBOL_MAP.get(ui_symbol, "99926000")
+        
+        # Calculate dynamic dates
+        now = datetime.now()
+        one_week_ago = now - timedelta(days=7)
+        four_weeks_ago = now - timedelta(days=28)
+        
+        now_str = now.strftime("%Y-%m-%d %H:%M")
+        one_week_str = one_week_ago.strftime("%Y-%m-%d 09:15")
+        four_weeks_str = four_weeks_ago.strftime("%Y-%m-%d 09:15")
+        
+        session = get_session()
+        auth_token = session['auth_token']
+        
+        print(f"📈 Fetching 15-min data ({one_week_str} to {now_str})...")
+        df_15m = get_candle_data(auth_token, token, "FIFTEEN_MINUTE", one_week_str, now_str)
+        
+        print(f"📈 Fetching 1-day data ({four_weeks_str} to {now_str})...")
+        df_1d = get_candle_data(auth_token, token, "ONE_DAY", four_weeks_str, now_str)
+        
+        csv_15m = df_15m.to_csv(index=False) if not df_15m.empty else "No 15m data available."
+        csv_1d = df_1d.to_csv(index=False) if not df_1d.empty else "No 1d data available."
+        
+        if "GEMINI_API_KEY" not in os.environ:
+            raise ValueError("GEMINI_API_KEY not found in environment.")
+            
+        print("🧠 Sending data to Gemini...")
+        client = genai.Client()
+        
+        user_prompt = f"""
+        Analyze the following multi-timeframe candle data for {ui_symbol}. 
+        Identify the macro trend from the Daily data, and look for immediate momentum or entry signals in the 15-minute data.
+
+        ### 1-Day Candles (Macro Trend)
+        {csv_1d}
+
+        ### 15-Minute Candles (Micro Price Action)
+        {csv_15m}
+
+        Please provide:
+        1. A brief summary of the multi-timeframe alignment.
+        2. Key support and resistance levels based on this data.
+        3. A directional bias for the upcoming session.
+        """
+                
+        response = client.models.generate_content(
+            model='gemini-3.5-flash', # Update this to 'gemini-2.5-flash' or 'gemini-1.5-flash' if 3.5 throws a model not found error
+            contents=user_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction="You are an expert algorithmic trading assistant. Provide concise, data-driven technical analysis without financial disclaimers.",
+                temperature=0.1, 
+            )
+        )
+        
+        return jsonify({"status": "success", "analysis": response.text})
+    except Exception as e:
+        print(f"❌ AI ERROR: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
