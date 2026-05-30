@@ -2,6 +2,7 @@
 
 ![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-lightgrey.svg)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg)
 ![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
 Originally engineered as a personal utility, this application streamlines the extraction of live and recent market data into structured CSVs. It was specifically built to supply clean OHLC data to AI models and algorithmic tools for analyzing trends and generating trade signals.
@@ -19,6 +20,7 @@ The platform is currently hosted online via the Oracle Cloud Free Tier, making m
 - **SmartAPI Integration:** Automated login, TOTP generation, JWT token caching, and background session refreshing.
 - **Live Data Retrieval:** Fetch precise recent OHLC data via Angel One's API for indices like NIFTY and BANK NIFTY across customizable timeframes.
 - **Data Export & Visualization:** View data in an elegant, zebra-striped HTML table and instantly copy it as a CSV for AI ingestion, Excel, or Python workflows.
+- 🚀 **Coming Soon - AI Market Intelligence (WIP):** An upcoming feature designed to leverage the extracted data for automated market analysis, trend detection, and AI-driven intelligence.
 
 ## Prerequisites
 - Python 3.8+
@@ -67,8 +69,9 @@ angel-quant/
 
 3. Select your desired Index, Interval, and Date Range, then click **Fetch Data**.
 
-## Cloud Deployment Overview
-This project is production-ready and can be easily deployed to cloud providers (like Oracle Cloud, AWS, or DigitalOcean) for 24/7 access. The recommended production stack includes:
+## Cloud Deployment & CI/CD
+This project is production-ready and is deployed for 24/7 access using the following stack and automation:
+- **CI/CD Pipeline (GitHub Actions):** Deployments are fully automated. Pushing code to the `main` branch triggers a GitHub Action that securely connects to the cloud instance, pulls the latest updates, installs new dependencies, and safely restarts the application.
 - **Gunicorn:** Acts as the robust WSGI HTTP backend server (`gunicorn --workers 3 --bind 127.0.0.1:5000 app:app`).
 - **Nginx:** Configured as a reverse proxy to securely route public web traffic (Port 80/443) to the internal Gunicorn service.
 - **Systemd:** Used to daemonize the application, ensuring it runs continuously in the background and restarts automatically on server reboots.
