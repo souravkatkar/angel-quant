@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Angel Quant Data Fetcher</title>
+    
+    <!-- Tailwind CSS & DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+
     <style>
         /* Modern Color Palette & Base */
         :root {
@@ -48,11 +53,11 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: var(--text-main);
             max-width: 800px;
-            margin: 40px auto;
+            margin: 40px auto !important;
             padding: 20px;
             line-height: 1.5;
         }
-        .container {
+        .app-container {
             background: var(--surface);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -79,17 +84,19 @@
             padding-bottom: 0;
         }
         .theme-toggle {
-            background: transparent;
-            color: var(--text-main);
+            background: transparent !important;
+            color: var(--text-main) !important;
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
             padding: 4px;
             width: auto;
             box-shadow: none;
+            min-height: auto;
+            display: inline-block;
         }
         .theme-toggle:hover {
-            background: transparent;
+            background: transparent !important;
             box-shadow: none;
             transform: scale(1.1);
         }
@@ -123,6 +130,8 @@
             background-color: var(--surface);
             transition: border-color 0.2s, box-shadow 0.2s;
             outline: none;
+            min-height: 52px;
+            box-sizing: border-box;
         }
         select:focus, input[type="datetime-local"]:focus {
             border-color: var(--primary);
@@ -131,10 +140,11 @@
         
         /* Buttons */
         button {
-            background-color: var(--primary);
-            color: white;
+            background-color: var(--primary) !important;
+            color: white !important;
             border: none;
-            padding: 14px 20px;
+            padding: 14px 20px !important;
+            min-height: 52px;
             font-size: 16px;
             font-weight: 600;
             border-radius: 8px;
@@ -142,9 +152,13 @@
             transition: all 0.2s;
             width: 100%;
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         button:hover { 
-            background-color: var(--primary-hover); 
+            background-color: var(--primary) !important; 
+            color: white !important;
             box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
         }
         button:active { transform: scale(0.98); }
@@ -165,13 +179,15 @@
         }
         .output-header h3 { margin: 0; font-size: 1.25rem; }
         .btn-copy {
-            background-color: var(--success);
-            padding: 8px 16px;
+            background-color: var(--success) !important;
+            color: white !important;
+            padding: 8px 16px !important;
             font-size: 14px;
             width: auto;
             box-shadow: none;
+            min-height: 40px;
         }
-        .btn-copy:hover { background-color: var(--success-hover); box-shadow: none; }
+        .btn-copy:hover { background-color: var(--success-hover) !important; box-shadow: none; }
         
         /* Error Message */
         .error-message {
@@ -218,8 +234,8 @@
         
         /* Mobile Responsiveness */
         @media (max-width: 600px) {
-            body { margin: 0; padding: 10px; }
-            .container { padding: 20px 15px; box-shadow: none; border-radius: 12px; }
+            body { margin: 0 !important; padding: 10px; }
+            .app-container { padding: 20px 15px; box-shadow: none; border-radius: 12px; }
             .header-container { margin-bottom: 20px; }
             h1 { font-size: 1.3rem; }
             .form-row { flex-direction: column; gap: 0; }
@@ -274,12 +290,23 @@
         <div class="blob color-4"></div>
     </div>
 
-    <div class="container">
+    <div class="app-container">
         <div class="header-container">
-            <h1>Live Data Fetcher</h1>
+            <h1 class="text-3xl md:text-4xl font-bold">Angel Quant</h1>
             <button id="themeToggle" class="theme-toggle" aria-label="Toggle Theme">🌙</button>
         </div>
-        <form id="fetchForm">
+
+        <!-- DaisyUI Tabs -->
+        <div class="flex justify-center w-full mb-6">
+            <div class="tabs tabs-boxed bg-base-200">
+                <a id="tab-live" class="tab tab-active text-lg px-6 h-10 transition-colors cursor-pointer">Live Dashboard</a>
+                <a id="tab-ai" class="tab text-lg px-6 h-10 transition-colors cursor-pointer">AI Market Intelligence</a>
+            </div>
+        </div>
+
+        <!-- Tab 1: Live Dashboard (Current Functionality) -->
+        <div id="content-live">
+            <form id="fetchForm">
             <div class="form-row">
                 <div class="form-group">
                     <label for="symbol">Index</label>
@@ -323,6 +350,13 @@
             </div>
             <div id="tableContainer" class="table-responsive"></div>
             <textarea id="csvOutput" style="display: none;" readonly></textarea>
+        </div>
+        </div>
+
+        <!-- Tab 2: AI Market Intelligence (Secondary Use) -->
+        <div id="content-ai" style="display: none;" class="text-center py-10">
+            <h2 class="text-2xl font-bold mb-4" style="color: var(--text-main);">AI Market Intelligence</h2>
+            <p style="color: var(--text-muted);">Secondary AI functionality coming soon...</p>
         </div>
     </div>
     

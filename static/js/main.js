@@ -39,6 +39,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Setup Tab switching logic
+        const tabLive = document.getElementById('tab-live');
+        const tabAi = document.getElementById('tab-ai');
+        const contentLive = document.getElementById('content-live');
+        const contentAi = document.getElementById('content-ai');
+
+        if (tabLive && tabAi) {
+            tabLive.addEventListener('click', () => {
+                tabLive.classList.add('tab-active');
+                tabAi.classList.remove('tab-active');
+                contentLive.style.display = 'block';
+                contentAi.style.display = 'none';
+            });
+            
+            tabAi.addEventListener('click', () => {
+                tabAi.classList.add('tab-active');
+                tabLive.classList.remove('tab-active');
+                contentLive.style.display = 'none';
+                contentAi.style.display = 'block';
+            });
+        }
+
         console.log("✓ main.js loaded successfully and dates populated.");
     } catch (e) {
         console.error("Error setting dates:", e);
