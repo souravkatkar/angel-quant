@@ -53,9 +53,11 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: var(--text-main);
             max-width: 800px;
+            width: 100%;
             margin: 40px auto !important;
             padding: 20px;
             line-height: 1.5;
+            overflow-x: hidden;
         }
         .app-container {
             background: var(--surface);
@@ -64,6 +66,10 @@
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
         }
         
         .header-container {
@@ -106,12 +112,15 @@
             display: flex;
             flex-direction: column;
             margin-bottom: 20px;
+            min-width: 0;
+            width: 100%;
         }
         .form-row {
             display: flex;
             gap: 20px;
+            min-width: 0;
         }
-        .form-row > .form-group { flex: 1; }
+        .form-row > .form-group { flex: 1; min-width: 0; }
         
         /* Inputs & Labels */
         label {
@@ -122,6 +131,7 @@
         }
         select, input[type="datetime-local"], textarea.ai-textarea {
             width: 100%;
+            max-width: 100%;
             padding: 12px;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -175,7 +185,7 @@
         }
         
         /* Output Section */
-        .output-section { margin-top: 30px; display: none; }
+        .output-section { margin-top: 30px; display: none; width: 100%; max-width: 100%; }
         .output-header {
             display: flex;
             justify-content: space-between;
@@ -204,6 +214,7 @@
             margin-top: 15px;
             display: none;
             font-size: 14px;
+            word-wrap: break-word;
         }
         
         /* Table Styles */
@@ -214,6 +225,7 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             background: var(--surface);
+            -webkit-overflow-scrolling: touch;
         }
         .data-table {
             width: 100%;
@@ -240,10 +252,11 @@
         /* Mobile Responsiveness */
         @media (max-width: 600px) {
             body { margin: 0 !important; padding: 10px; }
-            .app-container { padding: 20px 15px; box-shadow: none; border-radius: 12px; }
+            .app-container { padding: 20px 15px; box-shadow: none; border-radius: 12px; width: 100%; }
             .header-container { margin-bottom: 20px; }
-            h1 { font-size: 1.3rem; }
+            h1 { font-size: 1.3rem; word-break: break-word; }
             .form-row { flex-direction: column; gap: 0; }
+            .form-row > .form-group { margin-bottom: 16px; }
             .output-header { flex-direction: column; align-items: stretch; gap: 15px; }
             .btn-copy { width: 100%; }
         }
@@ -303,9 +316,9 @@
 
         <!-- DaisyUI Tabs -->
         <div class="flex justify-center w-full mb-6">
-            <div class="tabs tabs-boxed bg-base-200">
-                <a id="tab-live" class="tab tab-active text-lg px-6 h-10 transition-colors cursor-pointer">Live Dashboard</a>
-                <a id="tab-ai" class="tab text-lg px-6 h-10 transition-colors cursor-pointer">AI Market Intelligence</a>
+            <div class="tabs tabs-boxed bg-base-200 flex flex-row w-full sm:w-auto p-1">
+                <a id="tab-live" class="tab tab-active flex-1 text-sm sm:text-lg h-auto py-2 px-2 sm:px-6 transition-colors cursor-pointer text-center whitespace-normal sm:whitespace-nowrap leading-tight">Live Dashboard</a>
+                <a id="tab-ai" class="tab flex-1 text-sm sm:text-lg h-auto py-2 px-2 sm:px-6 transition-colors cursor-pointer text-center whitespace-normal sm:whitespace-nowrap leading-tight">AI Market Intelligence</a>
             </div>
         </div>
 
