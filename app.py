@@ -142,7 +142,11 @@ def generate_ai_analysis(user_prompt: str, max_retries: int = 5, initial_delay: 
             return response.text
 
         except Exception as e:
-            if "503" in str(e) or "UNAVAILABLE" in str(e):
+            if isinstance(e, json.JSONDecodeError):
+                delay = initial_delay * (2 ** attempt)
+                print(f"\n[Warning] Received HTML/Invalid data instead of JSON. Retrying in {delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                time.sleep(delay)
+            elif "503" in str(e) or "UNAVAILABLE" in str(e):
                 delay = initial_delay * (2 ** attempt)
                 print(f"\n[Warning] Server busy (503). Retrying in {delay} seconds... (Attempt {attempt + 1}/{max_retries})")
                 time.sleep(delay)
