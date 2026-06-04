@@ -22,6 +22,12 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, 'static')
 )
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Ensure all unhandled application crashes return JSON instead of a Flask HTML 500 page."""
+    print(f"❌ UNHANDLED SERVER ERROR: {str(e)}")
+    return jsonify({"status": "error", "message": f"Internal Server Error (500). {str(e)}"}), 500
+
 print("Initializing application...")
 
 # ── UI to API Mappings ────────────────────────────────────────────────────────
@@ -51,34 +57,38 @@ class MetaData(BaseModel):
     data_as_of: str = Field(description="Timestamp of the latest candle provided")
     session: str = Field(description="Trading session type, e.g., Regular")
 
-class Trend(BaseModel):
-    primary: str = Field(description="Primary trend direction")
-    primary_timeframe: str = Field(description="Timeframe for the primary trend, e.g., 1D")
-    secondary: str = Field(description="Secondary trend direction")
-    secondary_timeframe: str = Field(description="Timeframe for the secondary trend, e.g., 15m")
-    alignment: str = Field(description="How the trends interact")
+# -- Temporarily disabled to reduce token count / generation time --
+# class Trend(BaseModel):
+#     primary: str = Field(description="Primary trend direction")
+#     primary_timeframe: str = Field(description="Timeframe for the primary trend, e.g., 1D")
+#     secondary: str = Field(description="Secondary trend direction")
+#     secondary_timeframe: str = Field(description="Timeframe for the secondary trend, e.g., 15m")
+#     alignment: str = Field(description="How the trends interact")
 
-class MarketContext(BaseModel):
-    bias: str = Field(description="Directional bias for the upcoming session: Bullish, Bearish, or Neutral")
-    bias_strength: str = Field(description="Strength of the bias: Strong, Moderate, or Weak")
-    trend: Trend
-    phase: str = Field(description="Current market phase")
-    narrative: str = Field(description="Detailed narrative explaining price action")
+# class MarketContext(BaseModel):
+#     bias: str = Field(description="Directional bias for the upcoming session: Bullish, Bearish, or Neutral")
+#     bias_strength: str = Field(description="Strength of the bias: Strong, Moderate, or Weak")
+#     trend: Trend
+#     phase: str = Field(description="Current market phase")
+#     narrative: str = Field(description="Detailed narrative explaining price action")
 
-class KeyLevel(BaseModel):
-    price: float = Field(description="Price level")
-    type: str = Field(description="Description of the level")
-    significance: str = Field(description="Significance: High, Medium, or Low")
+# class KeyLevel(BaseModel):
+#     price: float = Field(description="Price level")
+#     type: str = Field(description="Description of the level")
+#     significance: str = Field(description="Significance: High, Medium, or Low")
+# -----------------------------------------------------------------
 
 class DrawOnLiquidity(BaseModel):
     upside_target: float = Field(description="Next major upside liquidity level")
     downside_target: float = Field(description="Next major downside liquidity level")
     current_draw: str = Field(description="Which direction is price currently being drawn to?")
 
-class KeyLevels(BaseModel):
-    resistance: list[KeyLevel]
-    support: list[KeyLevel]
-    draw_on_liquidity: DrawOnLiquidity
+# -- Temporarily disabled to reduce token count / generation time --
+# class KeyLevels(BaseModel):
+#     resistance: list[KeyLevel]
+#     support: list[KeyLevel]
+#     draw_on_liquidity: DrawOnLiquidity
+# -----------------------------------------------------------------
 
 class SignalEntry(BaseModel):
     price: float = Field(description="Exact entry price")
@@ -110,8 +120,8 @@ class TradeSignal(BaseModel):
 
 class TradingReport(BaseModel):
     meta: MetaData
-    market_context: MarketContext
-    key_levels: KeyLevels
+    # market_context: MarketContext
+    # key_levels: KeyLevels
     signals: list[TradeSignal]
     risk_notes: str = Field(description="Overall risk disclaimers and warnings")
 
@@ -146,9 +156,9 @@ def generate_ai_analysis(user_prompt: str, max_retries: int = 5, initial_delay: 
                 delay = initial_delay * (2 ** attempt)
                 print(f"\n[Warning] Received HTML/Invalid data instead of JSON. Retrying in {delay} seconds... (Attempt {attempt + 1}/{max_retries})")
                 time.sleep(delay)
-            elif "503" in str(e) or "UNAVAILABLE" in str(e):
+            elif any(err in str(e) for err in ["503", "UNAVAILABLE", "500", "Internal Server Error"]):
                 delay = initial_delay * (2 ** attempt)
-                print(f"\n[Warning] Server busy (503). Retrying in {delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                print(f"\n[Warning] Server busy or internal error (500). Retrying in {delay} seconds... (Attempt {attempt + 1}/{max_retries})")
                 time.sleep(delay)
             else:
                 print(f"\n[Error] Encountered non-transient error: {e}")
