@@ -82,15 +82,26 @@ document.getElementById('aiAnalyzeBtn')?.addEventListener('click', async () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ symbol: symbol })
         });
-        const result = await response.json();
+        
+        const responseText = await response.text();
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (e) {
+            throw new Error(`Received unexpected format (HTTP ${response.status}). Raw response:\n\n${responseText}`);
+        }
         
         if (response.ok && result.status === 'success') {
-            output.value = result.analysis;
+            try {
+                output.value = JSON.stringify(JSON.parse(result.analysis), null, 2);
+            } catch (parseError) {
+                output.value = result.analysis;
+            }
         } else {
             throw new Error(result.message || 'Failed to fetch analysis');
         }
     } catch (error) {
-        output.value = 'Error generating analysis: ' + error.message;
+        output.value = 'Error generating analysis:\n\n' + error.message;
     } finally {
         btn.disabled = false;
         btn.textContent = 'Get Live Market Analysis';
