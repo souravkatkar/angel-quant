@@ -1,11 +1,17 @@
 import os
+import json
+import time
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
-from client.connection import get_session
-from client.historical import get_candle_data
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
+
 from google import genai
 from google.genai import types
+
+from client.connection import get_session
+from client.historical import get_candle_data
+
 
 load_dotenv()
 
@@ -35,6 +41,116 @@ SYMBOL_MAP = {
     "BANK NIFTY": "99926009"
 }
 
+# ==========================================
+# PYDANTIC SCHEMA DEFINITION
+# ==========================================
+class MetaData(BaseModel):
+    symbol: str = Field(description="The ticker symbol, e.g., NIFTY")
+    timeframe_analyzed: list[str] = Field(description="List of timeframes analyzed, e.g., ['1D', '15m']")
+    generated_at: str = Field(description="Current ISO timestamp")
+    data_as_of: str = Field(description="Timestamp of the latest candle provided")
+    session: str = Field(description="Trading session type, e.g., Regular")
+
+class Trend(BaseModel):
+    primary: str = Field(description="Primary trend direction")
+    primary_timeframe: str = Field(description="Timeframe for the primary trend, e.g., 1D")
+    secondary: str = Field(description="Secondary trend direction")
+    secondary_timeframe: str = Field(description="Timeframe for the secondary trend, e.g., 15m")
+    alignment: str = Field(description="How the trends interact")
+
+class MarketContext(BaseModel):
+    bias: str = Field(description="Directional bias for the upcoming session: Bullish, Bearish, or Neutral")
+    bias_strength: str = Field(description="Strength of the bias: Strong, Moderate, or Weak")
+    trend: Trend
+    phase: str = Field(description="Current market phase")
+    narrative: str = Field(description="Detailed narrative explaining price action")
+
+class KeyLevel(BaseModel):
+    price: float = Field(description="Price level")
+    type: str = Field(description="Description of the level")
+    significance: str = Field(description="Significance: High, Medium, or Low")
+
+class DrawOnLiquidity(BaseModel):
+    upside_target: float = Field(description="Next major upside liquidity level")
+    downside_target: float = Field(description="Next major downside liquidity level")
+    current_draw: str = Field(description="Which direction is price currently being drawn to?")
+
+class KeyLevels(BaseModel):
+    resistance: list[KeyLevel]
+    support: list[KeyLevel]
+    draw_on_liquidity: DrawOnLiquidity
+
+class SignalEntry(BaseModel):
+    price: float = Field(description="Exact entry price")
+    trigger: str = Field(description="The specific price action trigger")
+    entry_type: str = Field(description="Type of order: Limit, Market, Stop-Limit")
+
+class SignalTarget(BaseModel):
+    price: float = Field(description="Target price level")
+    label: str = Field(description="Target label, e.g., TP1, TP2")
+    reward_points: float = Field(description="Points gained if hit")
+    rr_ratio: float = Field(description="Risk/Reward ratio for this target")
+
+class RiskManagement(BaseModel):
+    stoploss: float = Field(description="Hard stoploss level")
+    risk_points: float = Field(description="Total points at risk")
+    targets: list[SignalTarget]
+    suggested_lot_split: str = Field(description="Suggested partial profit taking strategy")
+
+class TradeSignal(BaseModel):
+    id: str = Field(description="Unique signal ID, e.g., SIG-001")
+    direction: str = Field(description="Long or Short")
+    status: str = Field(description="Pending or Active")
+    confidence: str = Field(description="High, Medium, or Low")
+    setup_type: str = Field(description="Type of setup")
+    entry: SignalEntry
+    risk_management: RiskManagement
+    rationale: str = Field(description="Detailed reason for taking this trade")
+    invalidation: str = Field(description="Specific condition that invalidates the setup")
+
+class TradingReport(BaseModel):
+    meta: MetaData
+    market_context: MarketContext
+    key_levels: KeyLevels
+    signals: list[TradeSignal]
+    risk_notes: str = Field(description="Overall risk disclaimers and warnings")
+
+ICT_SYSTEM_INSTRUCTION = """
+You are an expert quantitative analyst specializing in the ICT (Inner Circle Trader) 2022 Mentorship model. 
+Your objective is to analyze price action based strictly on Liquidity, Market Structure Shifts (MSS), Displacement, and Fair Value Gaps (FVG). 
+Do not use retail concepts like RSI, MACD, or trendlines.
+"""
+
+def generate_ai_analysis(user_prompt: str, max_retries: int = 5, initial_delay: int = 2) -> str:
+    """Handles Gemini API calls with exponential backoff for server unavailability."""
+    client = genai.Client()
+    
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=ICT_SYSTEM_INSTRUCTION,
+                    temperature=0.0, 
+                    response_mime_type="application/json",
+                    response_schema=TradingReport, 
+                )
+            )
+            # Validate JSON response structure
+            json.loads(response.text)
+            return response.text
+
+        except Exception as e:
+            if "503" in str(e) or "UNAVAILABLE" in str(e):
+                delay = initial_delay * (2 ** attempt)
+                print(f"\n[Warning] Server busy (503). Retrying in {delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                time.sleep(delay)
+            else:
+                print(f"\n[Error] Encountered non-transient error: {e}")
+                raise e
+                
+    raise RuntimeError(f"Failed to get data from Gemini after {max_retries} attempts due to high demand.")
 
 @app.route('/')
 def index():
@@ -127,34 +243,33 @@ def analyze_market():
             raise ValueError("GEMINI_API_KEY not found in environment.")
             
         print("🧠 Sending data to Gemini...")
-        client = genai.Client()
         
+        # ==========================================
+        # PROMPTS & INSTRUCTIONS (ICT SPECIFIC)
+        # ==========================================
         user_prompt = f"""
-        Analyze the following multi-timeframe candle data for {ui_symbol}. 
-        Identify the macro trend from the Daily data, and look for immediate momentum or entry signals in the 15-minute data.
+        Analyze the following multi-timeframe candle data for NIFTY 50 using strict ICT 2022 mechanics.
 
-        ### 1-Day Candles (Macro Trend)
+        ### 1-Day Candles (Macro Narrative & Draw on Liquidity)
         {csv_1d}
 
-        ### 15-Minute Candles (Micro Price Action)
+        ### 15-Minute Candles (Micro Price Action & Entry Models)
         {csv_15m}
 
-        Please provide:
-        1. A brief summary of the multi-timeframe alignment.
-        2. Key support and resistance levels based on this data.
-        3. A directional bias for the upcoming session.
+        ### RULES FOR ANALYSIS:
+        1. **Draw on Liquidity (DOL):** Identify unmitigated Buy-Side Liquidity (BSL) above old daily highs, or Sell-Side Liquidity (SSL) below old daily lows. The DOL must be the most obvious nearest peak or trough.
+        2. **Market Structure Shift (MSS):** Look for a 15m candle that sweeps a short-term high/low and then reverses with strong displacement, breaking the opposing fractal structure.
+        3. **Displacement & FVG:** The entry signal MUST be based on a return to a Fair Value Gap (a 3-candle imbalance) created during the displacement leg of the MSS.
+        4. **Risk/Reward:** Stop losses must be placed strictly behind the swing high/low that created the MSS. Targets must scale out at opposing liquidity pools (BSL/SSL).
+
+        Extract the requested technical parameters based STRICTLY on these ICT rules and output them matching the provided JSON schema.
         """
-                
-        response = client.models.generate_content(
-            model='gemini-3.5-flash', # Update this to 'gemini-2.5-flash' or 'gemini-1.5-flash' if 3.5 throws a model not found error
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction="You are an expert algorithmic trading assistant. Provide concise, data-driven technical analysis without financial disclaimers.",
-                temperature=0.1, 
-            )
-        )
+
+        print("Sending data to Gemini using 0.0 temperature...")
+        analysis_result = generate_ai_analysis(user_prompt)
+        print("\nSuccess! Analysis generated.")
         
-        return jsonify({"status": "success", "analysis": response.text})
+        return jsonify({"status": "success", "analysis": analysis_result})
     except Exception as e:
         print(f"❌ AI ERROR: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
