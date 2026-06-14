@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angel Quant - Log Analysis</title>
+    
+    <!-- Tailwind CSS & DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+    <style>
+        /* Modern Color Palette & Base */
+        :root {
+            color-scheme: light;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f3f4f6;
+            --surface: rgba(255, 255, 255, 0.85);
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --border: #d1d5db;
+            --success: #10b981;
+            --success-hover: #059669;
+            --danger: #ef4444;
+            --row-alt: #f9fafb;
+            --row-hover: #f3f4f6;
+            --blob-opacity: 0.4;
+        }
+        
+        /* Dark Theme Overrides */
+        [data-theme="dark"] {
+            color-scheme: dark;
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --bg-color: #111827;
+            --surface: rgba(31, 41, 55, 0.85);
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: #374151;
+            --success: #10b981;
+            --success-hover: #059669;
+            --row-alt: #111827;
+            --row-hover: #374151;
+            --blob-opacity: 0.15;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            max-width: 1400px; /* Wider for logs */
+            width: 100%;
+            margin: 40px auto !important;
+            padding: 20px;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        .app-container {
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 12px;
+        }
+        h1 { 
+            margin-top: 0; 
+            color: var(--text-main);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .theme-toggle {
+            background: transparent !important;
+            color: var(--text-main) !important;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+            width: auto;
+            box-shadow: none;
+            min-height: auto;
+            display: inline-block;
+        }
+        .theme-toggle:hover {
+            background: transparent !important;
+            box-shadow: none;
+            transform: scale(1.1);
+        }
+        
+        /* Inputs & Labels */
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+        select, input[type="text"] {
+            width: 100%;
+            max-width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            color: var(--text-main);
+            background-color: var(--surface);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            min-height: 44px;
+            box-sizing: border-box;
+        }
+        select:focus, input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+        
+        /* Buttons */
+        .btn-custom {
+            background-color: var(--primary) !important;
+            color: white !important;
+            border: none;
+            padding: 10px 20px !important;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-custom:hover { 
+            box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+        }
+        .btn-custom:active { transform: scale(0.98); }
+        
+        /* Table Styles */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 600px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            -webkit-overflow-scrolling: touch;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+        .data-table th, .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .data-table th {
+            background-color: var(--bg-color);
+            color: var(--text-muted);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .data-table tr:nth-child(even) { background-color: var(--row-alt); }
+        .data-table tr:hover { background-color: var(--row-hover); }
+        
+        /* Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            z-index: -1;
+            transition: background-color 0.3s ease;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: var(--blob-opacity);
+            will-change: transform;
+            animation: float 15s infinite alternate ease-in-out;
+        }
+        .color-1 { background: linear-gradient(135deg, #3b82f6, #8b5cf6); width: 50vw; height: 50vw; top: -10%; left: -10%; animation-delay: 0s; }
+        .color-2 { background: linear-gradient(135deg, #ec4899, #f43f5e); width: 60vw; height: 60vw; bottom: -20%; right: -10%; animation-delay: -3s; }
+        .color-3 { background: linear-gradient(135deg, #10b981, #06b6d4); width: 45vw; height: 45vw; top: 40%; left: 40%; animation-delay: -7s; }
+        .color-4 { background: linear-gradient(135deg, #8b5cf6, #ec4899); width: 40vw; height: 40vw; bottom: 10%; left: -10%; animation-delay: -11s; }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(5vw, 10vh) scale(1.1); }
+            66% { transform: translate(-10vw, 5vh) scale(0.9); }
+            100% { transform: translate(5vw, -5vh) scale(1.05); }
+        }
+
+        /* Collapsible formatting */
+        details summary {
+            cursor: pointer;
+            user-select: none;
+            outline: none;
+        }
+        details[open] summary {
+            margin-bottom: 8px;
+        }
+    </style>
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</head>
+<body>
+    <div class="mesh-bg">
+        <div class="blob color-1"></div>
+        <div class="blob color-2"></div>
+        <div class="blob color-3"></div>
+        <div class="blob color-4"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header-container">
+            <div class="flex items-center gap-4">
+                <a href="/" class="btn btn-sm btn-ghost border border-gray-500 rounded px-3 py-1 flex items-center justify-center font-semibold">
+                    ← App Home
+                </a>
+                <h1 class="text-3xl font-bold">Log Dashboard</h1>
+            </div>
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle Theme">🌙</button>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="bg-base-200/50 p-6 rounded-xl mb-6 border border-base-300">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>🔍</span> Filter & Trace Logs
+            </h2>
+            <form id="filterForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex flex-col">
+                    <label for="filterIp">Client IP Address</label>
+                    <input type="text" id="filterIp" placeholder="e.g. 127.0.0.1" />
+                </div>
+                <div class="flex flex-col">
+                    <label for="filterRequestId">Request ID</label>
+                    <input type="text" id="filterRequestId" placeholder="e.g. 893c5d6f" />
+                </div>
+                <div class="flex flex-col justify-end">
+                    <div class="flex items-center gap-4 mb-2">
+                        <input type="checkbox" id="filterErrorsOnly" class="checkbox checkbox-error border-2 border-error" />
+                        <label for="filterErrorsOnly" class="cursor-pointer select-none font-bold text-error m-0">Show Errors Only</label>
+                    </div>
+                </div>
+                
+                <div class="md:col-span-3 flex justify-between gap-4 mt-2">
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn-custom">Apply Filters</button>
+                        <button type="button" id="clearFiltersBtn" class="btn btn-outline border-base-300 hover:bg-base-300">Clear</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" id="refreshBtn" class="btn-custom bg-success hover:bg-success/80">
+                            🔄 Refresh Logs
+                        </button>
+                        <a href="/api/logs/download?fmt=txt" id="downloadLogsTxtBtn" class="btn-custom bg-info hover:bg-info/80 text-white flex items-center gap-2" download="app_logs.txt">
+                            📄 Download TXT
+                        </a>
+                        <a href="/api/logs/download?fmt=json" id="downloadLogsJsonBtn" class="btn-custom bg-info hover:bg-info/80 text-white flex items-center gap-2" download="app_logs.json">
+                            📦 Download JSON
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Traced Process Sequence Section (Hidden by default, shown when request ID filtered) -->
+        <div id="traceSection" class="bg-primary/5 p-6 rounded-xl mb-6 border border-primary/30 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-primary flex items-center gap-2">
+                    <span>⚡</span> Traced Process Lifecycle (Exact Steps)
+                </h2>
+                <div class="flex gap-2">
+                    <span class="badge badge-primary font-mono text-sm px-3 py-2" id="tracedIdVal">Request ID: -</span>
+                    <button type="button" id="closeTraceBtn" class="btn btn-xs btn-outline hover:btn-primary">Clear Trace</button>
+                </div>
+            </div>
+            
+            <!-- Timeline steps wrapper -->
+            <ul id="timelineContainer" class="timeline timeline-vertical timeline-compact bg-base-100 p-6 rounded-lg border border-base-200 max-h-96 overflow-y-auto">
+                <!-- Dynamically populated steps go here -->
+            </ul>
+        </div>
+
+        <!-- All Logs Output -->
+        <div class="output-section show block">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-xl font-bold">System Log Records</h3>
+                <span class="text-xs text-neutral-content bg-neutral font-semibold rounded px-2.5 py-1" id="logCountVal">
+                    Showing 0 entries
+                </span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="w-40">Timestamp</th>
+                            <th class="w-20">Level</th>
+                            <th class="w-28">IP Address</th>
+                            <th class="w-28">Request ID</th>
+                            <th class="w-36">Module</th>
+                            <th class="w-full">Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center py-8 text-gray-500">
+                                Loading application logs...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/log.js') }}?t={{ range(1, 999999) | random }}" defer></script>
+</body>
+</html>

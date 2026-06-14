@@ -6,6 +6,7 @@ venv/
 
 # App Data
 .session.json
+app.log.jsonl
 
 # Python
 __pycache__/

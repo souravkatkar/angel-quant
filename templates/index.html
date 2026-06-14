@@ -8,41 +8,50 @@
     <!-- Tailwind CSS & DaisyUI -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Modern Color Palette & Base */
+        /* Enterprise Light Minimalism */
         :root {
             color-scheme: light;
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --bg-color: #f3f4f6;
-            --surface: rgba(255, 255, 255, 0.85);
-            --text-main: #1f2937;
-            --text-muted: #4b5563;
-            --border: #d1d5db;
+            --btn-text: #ffffff;
+            --bg-color: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
             --success: #10b981;
-            --success-hover: #059669;
             --danger: #ef4444;
-            --row-alt: #f9fafb;
-            --row-hover: #f3f4f6;
-            --blob-opacity: 0.4;
+            --row-alt: #f8fafc;
+            --row-hover: #f1f5f9;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --input-bg: #ffffff;
+            --tab-active-bg: #f1f5f9;
+            --tab-active-text: #0f172a;
         }
         
-        /* Dark Theme Overrides */
         [data-theme="dark"] {
             color-scheme: dark;
             --primary: #3b82f6;
             --primary-hover: #60a5fa;
-            --bg-color: #111827;
-            --surface: rgba(31, 41, 55, 0.85);
-            --text-main: #f9fafb;
-            --text-muted: #9ca3af;
-            --border: #374151;
-            --success: #10b981;
-            --success-hover: #059669;
-            --row-alt: #111827;
-            --row-hover: #374151;
-            --blob-opacity: 0.15;
+            --btn-text: #ffffff;
+            --bg-color: #0b0f19;
+            --surface: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --row-alt: #0b0f19;
+            --row-hover: #334155;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            --input-bg: #0b0f19;
+            --tab-active-bg: #334155;
+            --tab-active-text: #f8fafc;
         }
 
         *, *::before, *::after {
@@ -50,75 +59,71 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: var(--text-main);
-            max-width: 800px;
+            background-color: var(--bg-color);
+            max-width: 900px;
             width: 100%;
             margin: 40px auto !important;
             padding: 20px;
             line-height: 1.5;
-            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+        
         .app-container {
             background: var(--surface);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 40px;
+            padding: 48px;
             border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
             width: 100%;
-            max-width: 100%;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         
         .header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            border-bottom: 2px solid var(--bg-color);
-            padding-bottom: 12px;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
         }
         h1 { 
-            margin-top: 0; 
+            margin: 0; 
             color: var(--text-main);
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
-            margin-bottom: 0;
-            border-bottom: none;
-            padding-bottom: 0;
+            letter-spacing: -0.02em;
         }
+        
         .theme-toggle {
             background: transparent !important;
             color: var(--text-main) !important;
-            border: none;
-            font-size: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1.25rem;
             cursor: pointer;
-            padding: 4px;
-            width: auto;
-            box-shadow: none;
-            min-height: auto;
-            display: inline-block;
+            padding: 8px 12px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .theme-toggle:hover {
-            background: transparent !important;
-            box-shadow: none;
-            transform: scale(1.1);
+            background: var(--row-hover) !important;
         }
         
         /* Form Layout */
         .form-group {
             display: flex;
             flex-direction: column;
-            margin-bottom: 20px;
-            min-width: 0;
+            margin-bottom: 24px;
             width: 100%;
         }
         .form-row {
             display: flex;
-            gap: 20px;
-            min-width: 0;
+            gap: 24px;
+            width: 100%;
         }
         .form-row > .form-group { flex: 1; min-width: 0; }
         
@@ -126,22 +131,23 @@
         label {
             font-weight: 600;
             margin-bottom: 8px;
-            font-size: 14px;
-            color: var(--text-main);
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         select, input[type="datetime-local"], textarea.ai-textarea {
             width: 100%;
-            max-width: 100%;
-            padding: 12px;
+            padding: 12px 16px;
             border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 15px;
             color: var(--text-main);
-            background-color: var(--surface);
-            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: var(--input-bg);
+            transition: all 0.2s ease;
             outline: none;
-            min-height: 52px;
-            box-sizing: border-box;
+            min-height: 48px;
+            font-family: inherit;
         }
         textarea.ai-textarea {
             resize: vertical;
@@ -150,82 +156,77 @@
         }
         select:focus, input[type="datetime-local"]:focus, textarea.ai-textarea:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
         
         /* Buttons */
-        button {
+        .btn-primary {
             background-color: var(--primary) !important;
-            color: white !important;
+            color: var(--btn-text) !important;
             border: none;
-            padding: 14px 20px !important;
-            min-height: 52px;
-            font-size: 16px;
+            padding: 14px 24px !important;
+            min-height: 48px;
+            font-size: 15px;
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             width: 100%;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        button:hover { 
-            background-color: var(--primary) !important; 
-            color: white !important;
-            box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+        .btn-primary:hover { 
+            background-color: var(--primary-hover) !important;
         }
-        button:active { transform: scale(0.98); }
-        button:disabled { 
-            background-color: #9ca3af; 
-            cursor: not-allowed; 
-            transform: none; 
-            box-shadow: none;
+        .btn-primary:active { transform: translateY(1px); }
+        
+        .btn-copy {
+            background-color: transparent !important;
+            color: var(--primary) !important;
+            border: 1px solid var(--border) !important;
+            padding: 8px 16px !important;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .btn-copy:hover { 
+            background-color: var(--row-hover) !important; 
+            border-color: var(--primary) !important;
         }
         
         /* Output Section */
-        .output-section { margin-top: 30px; display: none; width: 100%; max-width: 100%; }
+        .output-section { margin-top: 36px; display: none; width: 100%; }
         .output-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
-        .output-header h3 { margin: 0; font-size: 1.25rem; }
-        .btn-copy {
-            background-color: var(--success) !important;
-            color: white !important;
-            padding: 8px 16px !important;
-            font-size: 14px;
-            width: auto;
-            box-shadow: none;
-            min-height: 40px;
-        }
-        .btn-copy:hover { background-color: var(--success-hover) !important; box-shadow: none; }
+        .output-header h3 { margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--text-main); }
         
         /* Error Message */
         .error-message {
             color: var(--danger);
-            background-color: #fef2f2;
-            border: 1px solid #f87171;
-            padding: 12px;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 16px;
             border-radius: 8px;
-            margin-top: 15px;
+            margin-top: 20px;
             display: none;
             font-size: 14px;
-            word-wrap: break-word;
         }
         
         /* Table Styles */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
-            max-height: 400px;
+            max-height: 450px;
             border: 1px solid var(--border);
             border-radius: 8px;
             background: var(--surface);
-            -webkit-overflow-scrolling: touch;
         }
         .data-table {
             width: 100%;
@@ -234,66 +235,66 @@
             text-align: left;
         }
         .data-table th, .data-table td {
-            padding: 10px 16px;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
         .data-table th {
-            background-color: var(--bg-color);
+            background-color: var(--input-bg);
             color: var(--text-muted);
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 11px;
             position: sticky;
             top: 0;
             z-index: 1;
+            box-shadow: 0 1px 0 var(--border);
         }
         .data-table tr:nth-child(even) { background-color: var(--row-alt); }
         .data-table tr:hover { background-color: var(--row-hover); }
         
+        /* Custom Tabs */
+        .custom-tabs {
+            display: flex;
+            background: var(--input-bg);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 32px;
+            gap: 4px;
+        }
+        .custom-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+        }
+        .custom-tab:hover {
+            color: var(--text-main);
+        }
+        .custom-tab.active {
+            color: var(--tab-active-text);
+            background: var(--tab-active-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
         /* Mobile Responsiveness */
         @media (max-width: 600px) {
-            body { margin: 0 !important; padding: 10px; }
-            .app-container { padding: 20px 15px; box-shadow: none; border-radius: 12px; width: 100%; }
-            .header-container { margin-bottom: 20px; }
-            h1 { font-size: 1.3rem; word-break: break-word; }
+            body { margin: 0 !important; padding: 16px; }
+            .app-container { padding: 24px 20px; }
             .form-row { flex-direction: column; gap: 0; }
-            .form-row > .form-group { margin-bottom: 16px; }
-            .output-header { flex-direction: column; align-items: stretch; gap: 15px; }
-            .btn-copy { width: 100%; }
-        }
-
-        /* Mesh Background */
-        .mesh-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: var(--bg-color);
-            overflow: hidden;
-            z-index: -1;
-            transition: background-color 0.3s ease;
-        }
-        .blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(90px);
-            opacity: var(--blob-opacity);
-            will-change: transform;
-            animation: float 15s infinite alternate ease-in-out;
-        }
-        .color-1 { background: linear-gradient(135deg, #3b82f6, #8b5cf6); width: 50vw; height: 50vw; top: -10%; left: -10%; animation-delay: 0s; }
-        .color-2 { background: linear-gradient(135deg, #ec4899, #f43f5e); width: 60vw; height: 60vw; bottom: -20%; right: -10%; animation-delay: -3s; }
-        .color-3 { background: linear-gradient(135deg, #10b981, #06b6d4); width: 45vw; height: 45vw; top: 40%; left: 40%; animation-delay: -7s; }
-        .color-4 { background: linear-gradient(135deg, #8b5cf6, #ec4899); width: 40vw; height: 40vw; bottom: 10%; left: -10%; animation-delay: -11s; }
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(5vw, 10vh) scale(1.1); }
-            66% { transform: translate(-10vw, 5vh) scale(0.9); }
-            100% { transform: translate(5vw, -5vh) scale(1.05); }
+            .form-row > .form-group { margin-bottom: 20px; }
+            .custom-tabs { flex-direction: column; }
         }
     </style>
     <script>
-        // Prevent FOUC (Flash of Unstyled Content) by setting theme early
+        // Prevent FOUC
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -301,93 +302,84 @@
     </script>
 </head>
 <body>
-    <div class="mesh-bg">
-        <div class="blob color-1"></div>
-        <div class="blob color-2"></div>
-        <div class="blob color-3"></div>
-        <div class="blob color-4"></div>
-    </div>
-
     <div class="app-container">
         <div class="header-container">
-            <h1 class="text-3xl md:text-4xl font-bold">Angel Quant</h1>
+            <h1>Angel Quant</h1>
             <button id="themeToggle" class="theme-toggle" aria-label="Toggle Theme">🌙</button>
         </div>
 
-        <!-- DaisyUI Tabs -->
-        <div class="flex justify-center w-full mb-6">
-            <div class="tabs tabs-boxed bg-base-200 flex flex-row w-full sm:w-auto p-1">
-                <a id="tab-live" class="tab tab-active flex-1 text-sm sm:text-lg h-auto py-2 px-2 sm:px-6 transition-colors cursor-pointer text-center whitespace-normal sm:whitespace-nowrap leading-tight">Live Dashboard</a>
-                <a id="tab-ai" class="tab flex-1 text-sm sm:text-lg h-auto py-2 px-2 sm:px-6 transition-colors cursor-pointer text-center whitespace-normal sm:whitespace-nowrap leading-tight">AI Market Intelligence</a>
-            </div>
+        <!-- Custom Tabs -->
+        <div class="custom-tabs">
+            <div id="tab-live" class="custom-tab active">Live Dashboard</div>
+            <div id="tab-ai" class="custom-tab">AI Market Intelligence</div>
         </div>
 
-        <!-- Tab 1: Live Dashboard (Current Functionality) -->
+        <!-- Tab 1: Live Dashboard -->
         <div id="content-live">
             <form id="fetchForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="symbol">Index</label>
-                    <select id="symbol" required>
-                        <option value="NIFTY">NIFTY</option>
-                        <option value="BANK NIFTY">BANK NIFTY</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="symbol">Index</label>
+                        <select id="symbol" required>
+                            <option value="NIFTY">NIFTY</option>
+                            <option value="BANK NIFTY">BANK NIFTY</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="interval">Interval</label>
+                        <select id="interval" required>
+                            <option value="1m">1 Minute</option>
+                            <option value="3m">3 Minutes</option>
+                            <option value="5m" selected>5 Minutes</option>
+                            <option value="10m">10 Minutes</option>
+                            <option value="15m">15 Minutes</option>
+                            <option value="30m">30 Minutes</option>
+                            <option value="1h">1 Hour</option>
+                            <option value="1d">1 Day</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="interval">Interval</label>
-                    <select id="interval" required>
-                        <option value="1m">1 Minute</option>
-                        <option value="3m">3 Minutes</option>
-                        <option value="5m" selected>5 Minutes</option>
-                        <option value="10m">10 Minutes</option>
-                        <option value="15m">15 Minutes</option>
-                        <option value="30m">30 Minutes</option>
-                        <option value="1h">1 Hour</option>
-                        <option value="1d">1 Day</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="datetime-local" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">End Date</label>
+                        <input type="datetime-local" id="endDate" required>
+                    </div>
                 </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="startDate">Start Date</label>
-                    <input type="datetime-local" id="startDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="endDate">End Date</label>
-                    <input type="datetime-local" id="endDate" required>
-                </div>
-            </div>
-            <button type="submit" id="submitBtn">Fetch Data</button>
-            <div id="errorMsg" class="error-message"></div>
-        </form>
+                <button type="submit" id="submitBtn" class="btn-primary">Fetch Market Data</button>
+                <div id="errorMsg" class="error-message"></div>
+            </form>
 
-        <div class="output-section" id="outputSection">
-            <div class="output-header">
-                <h3>Result</h3>
-                <button type="button" class="btn-copy" id="copyBtn">Copy as CSV</button>
+            <div class="output-section" id="outputSection">
+                <div class="output-header">
+                    <h3>Market Data Feed</h3>
+                    <button type="button" class="btn-copy" id="copyBtn">Copy as CSV</button>
+                </div>
+                <div id="tableContainer" class="table-responsive"></div>
+                <textarea id="csvOutput" style="display: none;" readonly></textarea>
             </div>
-            <div id="tableContainer" class="table-responsive"></div>
-            <textarea id="csvOutput" style="display: none;" readonly></textarea>
-        </div>
         </div>
 
-        <!-- Tab 2: AI Market Intelligence (Secondary Use) -->
+        <!-- Tab 2: AI Market Intelligence -->
         <div id="content-ai" style="display: none;">
-            <div class="form-row" style="margin-bottom: 20px;">
-                <div class="form-group">
+            <div class="form-row" style="margin-bottom: 24px; align-items: flex-end;">
+                <div class="form-group" style="margin-bottom: 0;">
                     <label for="aiSymbol">Index</label>
                     <select id="aiSymbol">
                         <option value="NIFTY">NIFTY</option>
                         <option value="BANK NIFTY">BANK NIFTY</option>
                     </select>
                 </div>
-                <div class="form-group" style="justify-content: flex-end;">
-                    <button type="button" id="aiAnalyzeBtn">Get Live Market Analysis</button>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button type="button" id="aiAnalyzeBtn" class="btn-primary">Initialize AI Analysis</button>
                 </div>
             </div>
             <div class="form-group">
-                <label for="aiOutput">Market Analysis</label>
-                <textarea id="aiOutput" class="ai-textarea" placeholder="AI Analysis will appear here..." readonly></textarea>
+                <label for="aiOutput">Live Intelligence Report</label>
+                <textarea id="aiOutput" class="ai-textarea" placeholder="Awaiting telemetry... AI Analysis will appear here." readonly></textarea>
             </div>
         </div>
     </div>

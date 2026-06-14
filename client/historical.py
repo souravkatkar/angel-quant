@@ -9,10 +9,13 @@ Usage:
 """
 
 import json
+import logging
 import pandas as pd
 import requests
 from datetime import datetime
 from client.connection import get_headers
+
+logger = logging.getLogger("angel_quant.client.historical")
 
 BASE_HOST       = "apiconnect.angelone.in"
 HISTORICAL_PATH = "/rest/secure/angelbroking/historical/v1/getCandleData"
@@ -123,8 +126,8 @@ def get_candle_data(
     raw = response.get("data", [])
 
     if not raw:
-        print(f"⚠ No candles returned for token {symbol_token} ({interval}). "
-              f"Check token, exchange, or date range.")
+        logger.warning(f"No candles returned for token {symbol_token} ({interval}). "
+                       f"Check token, exchange, or date range.")
         return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
 
     df = pd.DataFrame(raw, columns=["timestamp", "open", "high", "low", "close", "volume"])
@@ -137,7 +140,7 @@ def get_candle_data(
     df[["open", "high", "low", "close"]] = df[["open", "high", "low", "close"]].astype(float)
     df["volume"] = df["volume"].astype(int)
 
-    print(f"✓ Fetched {len(df)} candles | Token: {symbol_token} | "
-          f"Interval: {interval} | {from_date} → {to_date}")
+    logger.info(f"✓ Fetched {len(df)} candles | Token: {symbol_token} | "
+                f"Interval: {interval} | {from_date} → {to_date}")
 
     return df

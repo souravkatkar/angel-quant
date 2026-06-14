@@ -10,12 +10,15 @@ Reads credentials from .env and exposes:
 import os
 import json
 import time
+import logging
 import pyotp
 import requests
 import jwt
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger("angel_quant.client.connection")
 
 # ── Credentials from .env ────────────────────────────────────────────────────
 CLIENT_ID     = os.getenv("CLIENT_ID")
@@ -99,7 +102,7 @@ def _perform_login() -> dict:
     Performs a full login with client ID, PIN, and TOTP.
     This should only be called when no valid session or refresh token exists.
     """
-    print("Performing full login with TOTP...")
+    logger.info("Performing full login with TOTP...")
     totp_code = pyotp.TOTP(TOTP_SECRET).now()
     payload = {
         "clientcode": CLIENT_ID,
@@ -121,7 +124,7 @@ def _perform_login() -> dict:
         "feed_token":    data["feedToken"],
     }
     _save_session_to_disk(session)
-    print("✓ Login successful. Session saved to disk.")
+    logger.info("✓ Login successful. Session saved to disk.")
     return session
 
 
@@ -129,7 +132,7 @@ def refresh_session(auth_token: str, refresh_token: str) -> dict:
     """
     Generates a new JWT using an existing refresh token.
     """
-    print("Auth token expired. Attempting to refresh session...")
+    logger.info("Auth token expired. Attempting to refresh session...")
     payload  = {"refreshToken": refresh_token}
     response = _post(
         "/rest/auth/angelbroking/jwt/v1/generateTokens",
@@ -149,7 +152,7 @@ def refresh_session(auth_token: str, refresh_token: str) -> dict:
         "feed_token":    data["feedToken"],
     }
     _save_session_to_disk(session)
-    print("✓ Session refreshed successfully. New tokens saved.")
+    logger.info("✓ Session refreshed successfully. New tokens saved.")
     return session
 
 
@@ -163,14 +166,14 @@ def get_session() -> dict:
     session = _load_session_from_disk()
 
     if session and not _is_token_expired(session.get("auth_token", "")):
-        print("✓ Using cached session.")
+        logger.info("✓ Using cached session.")
         return session
 
     if session and session.get("refresh_token"):
         try:
             return refresh_session(session["auth_token"], session["refresh_token"])
         except RuntimeError as e:
-            print(f"Refresh failed: {e}. Proceeding to full login.")
+            logger.warning(f"Refresh failed: {e}. Proceeding to full login.")
 
     return _perform_login()
 
