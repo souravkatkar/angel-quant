@@ -384,18 +384,52 @@ def analyze_market():
         {csv_15m}
         """
 
-        app_logger.info("Sending simple text generation request to Gemini...")
+        app_logger.info("Sending text generation request to Gemini...")
         client = genai.Client()
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=user_prompt,
-        )
+        
+        models_to_try = ['gemini-2.5-flash', 'gemini-1.5-flash']
+        max_retries = 3
+        response = None
+        last_error = None
+        
+        for model in models_to_try:
+            for attempt in range(max_retries):
+                try:
+                    app_logger.info(f"Trying model {model} (Attempt {attempt + 1}/{max_retries})...")
+                    response = client.models.generate_content(
+                        model=model,
+                        contents=user_prompt,
+                    )
+                    break # Success! Break out of retry loop
+                except Exception as e:
+                    last_error = e
+                    error_msg = str(e)
+                    if "503 UNAVAILABLE" in error_msg or "high demand" in error_msg.lower() or "429" in error_msg:
+                        backoff = 2 ** attempt
+                        app_logger.warning(f"Model {model} overloaded/rate-limited. Retrying in {backoff}s...")
+                        time.sleep(backoff)
+                    else:
+                        raise e # Re-raise if it's an unrelated error (e.g. auth/validation)
+            
+            if response:
+                break # Success! Break out of model fallback loop
+                
+        if not response:
+            app_logger.error("All retries and model fallbacks failed.")
+            raise last_error
 
         app_logger.info("Success! Analysis generated.")
         return jsonify({"status": "success", "analysis": response.text})
     except Exception as e:
-        app_logger.error(f"AI ERROR: {str(e)}", exc_info=True)
-        return jsonify({"status": "error", "message": str(e)}), 500
+        error_msg = str(e)
+        app_logger.error(f"AI ERROR: {error_msg}", exc_info=True)
+        
+        # Handle overloaded Gemini API gracefully
+        if "503 UNAVAILABLE" in error_msg or "high demand" in error_msg.lower():
+            user_friendly_msg = "The AI model is currently experiencing high demand. Please try again in a few moments."
+            return jsonify({"status": "error", "message": user_friendly_msg}), 503
+            
+        return jsonify({"status": "error", "message": error_msg}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
