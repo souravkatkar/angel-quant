@@ -69,28 +69,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // Setup Tab switching logic
+        // Setup Sidebar switching logic
         const tabLive = document.getElementById('tab-live');
         const tabAi = document.getElementById('tab-ai');
+        const tabChart = document.getElementById('tab-chart');
+        const tabBacktest = document.getElementById('tab-backtest');
+        
         const contentLive = document.getElementById('content-live');
         const contentAi = document.getElementById('content-ai');
 
+        const allTabs = [tabLive, tabAi, tabChart, tabBacktest].filter(Boolean);
+
+        function setActiveTab(activeTab) {
+            allTabs.forEach(tab => tab.classList.remove('active'));
+            activeTab.classList.add('active');
+        }
+
         if (tabLive && tabAi) {
             tabLive.addEventListener('click', () => {
-                tabLive.classList.add('active');
-                tabAi.classList.remove('active');
+                setActiveTab(tabLive);
                 contentLive.style.display = 'block';
                 contentAi.style.display = 'none';
-                logToServer('INFO', 'User switched to Live Market Data tab');
+                logToServer('INFO', 'User switched to CSV Candle Data section');
             });
             
             tabAi.addEventListener('click', () => {
-                tabAi.classList.add('active');
-                tabLive.classList.remove('active');
+                setActiveTab(tabAi);
                 contentLive.style.display = 'none';
                 contentAi.style.display = 'block';
-                logToServer('INFO', 'User switched to AI Market Analysis tab');
+                logToServer('INFO', 'User switched to AI Market Analysis section');
             });
+            
+            if(tabChart) {
+                tabChart.addEventListener('click', () => {
+                    alert("Chart Window is coming soon!");
+                    logToServer('INFO', 'User clicked placeholder Chart Window section');
+                });
+            }
+            
+            if(tabBacktest) {
+                tabBacktest.addEventListener('click', () => {
+                    alert("Backtesting is coming soon!");
+                    logToServer('INFO', 'User clicked placeholder Backtesting section');
+                });
+            }
         }
 
         logToServer('INFO', 'Main application dashboard loaded successfully');

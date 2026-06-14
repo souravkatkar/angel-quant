@@ -5,6 +5,7 @@ import uuid
 import logging
 import io
 import hashlib
+import re
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, g, has_request_context, send_file
 from dotenv import load_dotenv
@@ -27,11 +28,34 @@ ANALYSIS_CACHE = {}
 # ── Centralized Logging Setup ──────────────────────────────────────────────────
 class RequestFilter(logging.Filter):
     """Filters log records to dynamically inject Flask client IP and request ID."""
+    
+    def is_valid_ip(self, ip_str):
+        if not ip_str:
+            return False
+        if "://" in ip_str:
+            return False
+        # Catch common domain formats
+        if re.search(r'[a-zA-Z-]+\.[a-zA-Z]{2,}', ip_str):
+            return False
+        return True
+
     def filter(self, record):
         if has_request_context():
-            record.ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-            if record.ip and ',' in record.ip:
-                record.ip = record.ip.split(',')[0].strip()
+            ip_candidate = None
+            headers_to_check = ['X-Real-IP', 'CF-Connecting-IP', 'X-Forwarded-For']
+            
+            for header in headers_to_check:
+                val = request.headers.get(header)
+                if val:
+                    first_ip = val.split(',')[0].strip()
+                    if self.is_valid_ip(first_ip):
+                        ip_candidate = first_ip
+                        break
+                        
+            if not ip_candidate and self.is_valid_ip(request.remote_addr):
+                ip_candidate = request.remote_addr
+                
+            record.ip = ip_candidate or 'UNKNOWN'
             record.request_id = getattr(g, 'request_id', '-')
         else:
             record.ip = 'SYSTEM'
@@ -399,7 +423,7 @@ def analyze_market():
         client = genai.Client()
         
         def stream_generator():
-            models_to_try = ['gemini-2.5-flash', 'gemini-1.5-flash']
+            models_to_try = ['gemini-2.5-flash']
             max_retries = 3
             last_error = None
             
