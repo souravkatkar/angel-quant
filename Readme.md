@@ -5,7 +5,7 @@
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg)
 ![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
-Originally engineered as a personal utility for extracting market data, this application has evolved into a comprehensive trading dashboard featuring real-time WebSocket-powered charts and integrated AI intelligence. It is specifically built to supply clean OHLC data and technical analysis to traders, AI models, and algorithmic tools for analyzing trends and generating trade signals.
+Originally engineered as a personal utility for extracting market data, this application has evolved into a comprehensive trading dashboard featuring integrated AI intelligence. It is specifically built to supply clean OHLC data and technical analysis to traders, AI models, and algorithmic tools for analyzing trends and generating trade signals.
 
 ---
 
@@ -16,8 +16,7 @@ The platform is currently hosted online via the Oracle Cloud Free Tier, making m
 🌐 **[Live Instance](http://80.225.238.68/)**
 
 ## Features
-- **Modern Web Interface:** Fully responsive, modern dual-tab UI (Live Dashboard & AI Intelligence) using Tailwind CSS and DaisyUI, featuring a Dark/Light mode toggle and a high-performance CSS-only animated mesh gradient background.
-- **Real-Time Trading Charts:** Integrated WebSocket streaming to render dynamic, real-time interactive trading charts for live market monitoring.
+- **Modern Web Interface:** Fully responsive, modern dual-tab UI (CSV Candle Data and AI Market Intelligence) using Tailwind CSS and DaisyUI, featuring a Dark/Light mode toggle and a high-performance CSS-only animated mesh gradient background.
 - **SmartAPI Integration:** Automated login, TOTP generation, JWT token caching, and background session refreshing.
 - **Live Data Retrieval:** Fetch precise recent OHLC data via Angel One's API for indices like NIFTY and BANK NIFTY across customizable timeframes.
 - **Data Export & Visualization:** View data in an elegant, zebra-striped HTML table and instantly copy it as a CSV for AI ingestion, Excel, or Python workflows.
@@ -34,9 +33,9 @@ The platform is currently hosted online via the Oracle Cloud Free Tier, making m
 angel-quant/
 ├── app.py                  # Main Flask application and API routing
 ├── client/                 # Angel One SmartAPI backend logic & caching
-├── static/js/main.js       # Client-side UI logic, charting, and theme management
+├── static/js/main.js       # Client-side UI logic and theme management
 └── templates/
-    ├── index.html          # Frontend dashboard & charting interface
+    ├── index.html          # Frontend dashboard interface
     └── log.html            # System logging and error monitoring interface
 ```
 
