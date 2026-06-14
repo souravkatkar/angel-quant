@@ -163,8 +163,9 @@ document.getElementById('aiAnalyzeBtn')?.addEventListener('click', async () => {
             
             for (const line of lines) {
                 if (line.trim().startsWith("data: ")) {
+                    let data;
                     try {
-                        const data = JSON.parse(line.trim().substring(6));
+                        data = JSON.parse(line.trim().substring(6));
                         if (data.error) {
                             throw new Error(data.error);
                         }
