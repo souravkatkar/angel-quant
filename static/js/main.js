@@ -119,29 +119,46 @@ document.getElementById('aiAnalyzeBtn')?.addEventListener('click', async () => {
             body: JSON.stringify({ symbol: symbol })
         });
         
-        const responseText = await response.text();
-        let result;
-        try {
-            result = JSON.parse(responseText);
-        } catch (e) {
-            const parseErr = new Error(`Received unexpected format (HTTP ${response.status}). Raw response:\n\n${responseText}`);
-            logToServer('ERROR', 'Failed to parse AI Analysis JSON response from server', parseErr);
-            throw parseErr;
+        if (!response.ok) {
+            let errorMsg = `HTTP ${response.status}`;
+            try {
+                const errJson = await response.json();
+                if (errJson.message) errorMsg = errJson.message;
+            } catch (e) {}
+            throw new Error(errorMsg);
         }
         
-        if (response.ok && result.status === 'success') {
-            try {
-                output.value = JSON.stringify(JSON.parse(result.analysis), null, 2);
-                logToServer('INFO', `AI Analysis response successfully received and parsed as JSON for ${symbol}`);
-            } catch (parseError) {
-                output.value = result.analysis;
-                logToServer('INFO', `AI Analysis response successfully received and loaded as plain text for ${symbol}`);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        output.value = ""; // Clear the "Please wait" text
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n\n");
+            
+            for (const line of lines) {
+                if (line.trim().startsWith("data: ")) {
+                    try {
+                        const data = JSON.parse(line.trim().substring(6));
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        if (data.text) {
+                            output.value += data.text;
+                            output.scrollTop = output.scrollHeight; // Auto-scroll
+                        }
+                    } catch (e) {
+                        // Throw if it's our own error thrown above
+                        if (e.message === data?.error || line.includes('"error"')) throw e;
+                        console.warn("Partial chunk ignored", e);
+                    }
+                }
             }
-        } else {
-            const apiErr = new Error(result.message || 'Failed to fetch analysis');
-            logToServer('ERROR', `AI Analysis failed: ${apiErr.message}`, apiErr);
-            throw apiErr;
         }
+        logToServer('INFO', `AI Analysis streaming successfully completed for ${symbol}`);
     } catch (error) {
         output.value = 'Error generating analysis:\n\n' + error.message;
         if (!error.message.startsWith("Received unexpected format") && !error.message.startsWith("Failed to fetch") && !error.message.includes("failed:")) {

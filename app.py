@@ -4,6 +4,7 @@ import time
 import uuid
 import logging
 import io
+import hashlib
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, g, has_request_context, send_file
 from dotenv import load_dotenv
@@ -19,6 +20,9 @@ from client.historical import get_candle_data
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# ── Global Cache for AI Analysis ──────────────────────────────────────────────────
+ANALYSIS_CACHE = {}
 
 # ── Centralized Logging Setup ──────────────────────────────────────────────────
 class RequestFilter(logging.Filter):
@@ -93,9 +97,8 @@ def generate_request_id():
 def handle_exception(e):
     """Ensure all unhandled application crashes return JSON instead of a Flask HTML 500 page."""
     if isinstance(e, HTTPException):
-        if getattr(e, 'code', None) == 404:
-            app_logger.warning(f"404 Not Found: {request.url}")
-        else:
+        # Suppress logging 404/405 errors (typically caused by malicious bot scanners)
+        if getattr(e, 'code', None) not in [404, 405]:
             app_logger.warning(f"HTTP Exception {e.code}: {getattr(e, 'description', str(e))}")
         return jsonify({"status": "error", "message": getattr(e, 'description', str(e))}), getattr(e, 'code', 500)
         
@@ -367,6 +370,14 @@ def analyze_market():
         csv_15m = df_15m.to_csv(index=False) if not df_15m.empty else "No 15m data available."
         csv_1d = df_1d.to_csv(index=False) if not df_1d.empty else "No 1d data available."
         
+        # Check cache before proceeding
+        data_hash = hashlib.md5((csv_1d + csv_15m).encode('utf-8')).hexdigest()
+        if ui_symbol in ANALYSIS_CACHE and ANALYSIS_CACHE[ui_symbol]['hash'] == data_hash:
+            app_logger.info("Market data unchanged. Returning cached AI analysis.")
+            def cached_stream():
+                yield f"data: {json.dumps({'text': ANALYSIS_CACHE[ui_symbol]['response']})}\n\n"
+            return app.response_class(cached_stream(), mimetype='text/event-stream')
+        
         if "GEMINI_API_KEY" not in os.environ:
             raise ValueError("GEMINI_API_KEY not found in environment.")
             
@@ -384,51 +395,58 @@ def analyze_market():
         {csv_15m}
         """
 
-        app_logger.info("Sending text generation request to Gemini...")
+        app_logger.info("Sending text generation streaming request to Gemini...")
         client = genai.Client()
         
-        models_to_try = ['gemini-2.5-flash', 'gemini-1.5-flash']
-        max_retries = 3
-        response = None
-        last_error = None
-        
-        for model in models_to_try:
-            for attempt in range(max_retries):
-                try:
-                    app_logger.info(f"Trying model {model} (Attempt {attempt + 1}/{max_retries})...")
-                    response = client.models.generate_content(
-                        model=model,
-                        contents=user_prompt,
-                    )
-                    break # Success! Break out of retry loop
-                except Exception as e:
-                    last_error = e
-                    error_msg = str(e)
-                    if "503 UNAVAILABLE" in error_msg or "high demand" in error_msg.lower() or "429" in error_msg:
-                        backoff = 2 ** attempt
-                        app_logger.warning(f"Model {model} overloaded/rate-limited. Retrying in {backoff}s...")
-                        time.sleep(backoff)
-                    else:
-                        raise e # Re-raise if it's an unrelated error (e.g. auth/validation)
+        def stream_generator():
+            models_to_try = ['gemini-2.5-flash', 'gemini-1.5-flash']
+            max_retries = 3
+            last_error = None
             
-            if response:
-                break # Success! Break out of model fallback loop
+            for model in models_to_try:
+                for attempt in range(max_retries):
+                    try:
+                        app_logger.info(f"Trying model {model} (Attempt {attempt + 1}/{max_retries})...")
+                        response_stream = client.models.generate_content_stream(
+                            model=model,
+                            contents=user_prompt,
+                        )
+                        
+                        full_response = ""
+                        # Yield the stream as Server-Sent Events (SSE)
+                        for chunk in response_stream:
+                            if chunk.text:
+                                full_response += chunk.text
+                                yield f"data: {json.dumps({'text': chunk.text})}\n\n"
+                                
+                        # Save to cache after successful streaming
+                        ANALYSIS_CACHE[ui_symbol] = {'hash': data_hash, 'response': full_response}
+                        app_logger.info("Success! Analysis stream completed and cached.")
+                        return # Exit the generator on success
+                        
+                    except Exception as e:
+                        last_error = e
+                        error_msg = str(e)
+                        if "503 UNAVAILABLE" in error_msg or "high demand" in error_msg.lower() or "429" in error_msg:
+                            backoff = 2 ** attempt
+                            app_logger.warning(f"Model {model} overloaded/rate-limited. Retrying in {backoff}s...")
+                            time.sleep(backoff)
+                        else:
+                            # Re-raise or yield error if it's unrelated
+                            app_logger.error(f"Unrelated API Error: {error_msg}")
+                            yield f"data: {json.dumps({'error': error_msg})}\n\n"
+                            return
                 
-        if not response:
+            # If we exhaust all models and retries
             app_logger.error("All retries and model fallbacks failed.")
-            raise last_error
+            user_friendly_msg = "The AI model is currently experiencing high demand. Please try again in a few moments."
+            yield f"data: {json.dumps({'error': user_friendly_msg})}\n\n"
 
-        app_logger.info("Success! Analysis generated.")
-        return jsonify({"status": "success", "analysis": response.text})
+        return app.response_class(stream_generator(), mimetype='text/event-stream')
+
     except Exception as e:
         error_msg = str(e)
         app_logger.error(f"AI ERROR: {error_msg}", exc_info=True)
-        
-        # Handle overloaded Gemini API gracefully
-        if "503 UNAVAILABLE" in error_msg or "high demand" in error_msg.lower():
-            user_friendly_msg = "The AI model is currently experiencing high demand. Please try again in a few moments."
-            return jsonify({"status": "error", "message": user_friendly_msg}), 503
-            
         return jsonify({"status": "error", "message": error_msg}), 500
 
 if __name__ == '__main__':
