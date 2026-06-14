@@ -5,7 +5,7 @@
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg)
 ![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
-Originally engineered as a personal utility, this application streamlines the extraction of live and recent market data into structured CSVs. It was specifically built to supply clean OHLC data to AI models and algorithmic tools for analyzing trends and generating trade signals.
+Originally engineered as a personal utility for extracting market data, this application has evolved into a comprehensive trading dashboard featuring real-time WebSocket-powered charts and integrated AI intelligence. It is specifically built to supply clean OHLC data and technical analysis to traders, AI models, and algorithmic tools for analyzing trends and generating trade signals.
 
 ---
 
@@ -17,10 +17,12 @@ The platform is currently hosted online via the Oracle Cloud Free Tier, making m
 
 ## Features
 - **Modern Web Interface:** Fully responsive, modern dual-tab UI (Live Dashboard & AI Intelligence) using Tailwind CSS and DaisyUI, featuring a Dark/Light mode toggle and a high-performance CSS-only animated mesh gradient background.
+- **Real-Time Trading Charts:** Integrated WebSocket streaming to render dynamic, real-time interactive trading charts for live market monitoring.
 - **SmartAPI Integration:** Automated login, TOTP generation, JWT token caching, and background session refreshing.
 - **Live Data Retrieval:** Fetch precise recent OHLC data via Angel One's API for indices like NIFTY and BANK NIFTY across customizable timeframes.
 - **Data Export & Visualization:** View data in an elegant, zebra-striped HTML table and instantly copy it as a CSV for AI ingestion, Excel, or Python workflows.
 - 🚀 **AI Market Intelligence:** Integrated with Google's Gemini API to provide live, multi-timeframe technical analysis. Automatically evaluates the last 4 weeks of Daily data (macro trend) alongside 1 week of 15-minute data (micro price action) to deliver instant support/resistance levels and a directional bias.
+- **Systematic Logging & Monitoring:** Built-in application logging with a dedicated `/log` route for tracking errors, monitoring application health, and filtering logs by specific IP addresses.
 
 ## Prerequisites
 - Python 3.8+
@@ -32,8 +34,10 @@ The platform is currently hosted online via the Oracle Cloud Free Tier, making m
 angel-quant/
 ├── app.py                  # Main Flask application and API routing
 ├── client/                 # Angel One SmartAPI backend logic & caching
-├── static/js/main.js       # Client-side UI logic and theme management
-└── templates/index.html    # Frontend interface & CSS styling
+├── static/js/main.js       # Client-side UI logic, charting, and theme management
+└── templates/
+    ├── index.html          # Frontend dashboard & charting interface
+    └── log.html            # System logging and error monitoring interface
 ```
 
 ## Installation
